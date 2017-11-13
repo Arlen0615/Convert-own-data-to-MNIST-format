@@ -37,7 +37,7 @@ def _read32(bytestream):
   return numpy.frombuffer(bytestream.read(4), dtype=dt)[0]
 
 
-def extract_images(f):
+def extract_images(f, channels=1):
   """Extract the images into a 4D uint8 numpy array [index, y, x, depth].
 
   Args:
@@ -59,10 +59,11 @@ def extract_images(f):
     num_images = _read32(bytestream)
     rows = _read32(bytestream)
     cols = _read32(bytestream)
-    buf = bytestream.read(rows * cols * num_images)
+    buf = bytestream.read(rows * cols * num_images * channels)
     data = numpy.frombuffer(buf, dtype=numpy.uint8)
-    data = data.reshape(num_images, rows, cols, 1)
+    data = data.reshape(num_images, rows, cols, channels)
     return data
+
 
 
 def dense_to_one_hot(labels_dense, num_classes):
@@ -135,20 +136,21 @@ class DataSet(object):
       # Convert shape from [num examples, rows, columns, depth]
       # to [num examples, rows*columns] (assuming depth == 1)
       if reshape:
-        assert images.shape[3] == 1
+        #iassert images.shape[3] == 1
         images = images.reshape(images.shape[0],
-                                images.shape[1] * images.shape[2])
+                                images.shape[1] * images.shape[2], images.shape[3])
       if dtype == dtypes.float32:
         # Convert from [0, 255] -> [0.0, 1.0].
-        count = images.shape[0]
+        num, dim, channels = images.shape
+        count = num * dim * channels
         images.setflags(write=1)
-        for i in range(0,count,1000):
-            if not (count - i) < 1000:
-                X = images[i:i+1000].astype(numpy.float32)
-                images[i:i+1000] = numpy.multiply(X, 1.0 / 255.0)
+        index = 1000
+        images = images.astype(numpy.float32)
+        for i in range(0,count,index):
+            if not (count - i) < index:
+                images[i:i+index] = numpy.multiply(images[i:i+index], 1.0 / 255.0)
             else:
-                X = images[i:count].astype(numpy.float32)
-                images[i:count] = numpy.multiply(X, 1.0 / 255.0)
+                images[i:count] = numpy.multiply(images[i:count], 1.0 / 255.0)
         
         #images = images.astype(numpy.float32)
         #images = numpy.multiply(images, 1.0 / 255.0)
@@ -225,7 +227,8 @@ def read_data_sets(train_dir,
                    reshape=True,
                    validation_size=5000,
                    seed=None,
-                   num_classes=10):
+                   num_classes=10,
+                   channels=1):
   if fake_data:
 
     def fake():
@@ -245,7 +248,7 @@ def read_data_sets(train_dir,
   local_file = base.maybe_download(TRAIN_IMAGES, train_dir,
                                    SOURCE_URL + TRAIN_IMAGES)
   with open(local_file, 'rb') as f:
-    train_images = extract_images(f)
+    train_images = extract_images(f, channels)
 
   local_file = base.maybe_download(TRAIN_LABELS, train_dir,
                                    SOURCE_URL + TRAIN_LABELS)
@@ -255,7 +258,7 @@ def read_data_sets(train_dir,
   local_file = base.maybe_download(TEST_IMAGES, train_dir,
                                    SOURCE_URL + TEST_IMAGES)
   with open(local_file, 'rb') as f:
-    test_images = extract_images(f)
+    test_images = extract_images(f, channels)
 
   local_file = base.maybe_download(TEST_LABELS, train_dir,
                                    SOURCE_URL + TEST_LABELS)
