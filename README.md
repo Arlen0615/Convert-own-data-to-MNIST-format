@@ -22,13 +22,40 @@ Own data should use following strcture to put file, you must to transfer label t
 
 ## Samples:  
 1. `python convert_to_mnist_format.py notMNIST_small test 0`  
-mean: use whole data to make test format from notMNIST_small folder
+mean: use whole data to make test format from notMNIST_small folder  
 2. `python convert_to_mnist_format.py notMNIST_small train`  
-mean: use whole data to make train format from notMNIST_small folder
+mean: use whole data to make train format from notMNIST_small folder  
 3. `python convert_to_mnist_format.py notMNIST_small 5`  
-mean: use whole data to make MNIST format, and 5% is test format, 95% is train format 
+mean: use whole data to make MNIST format, and 5% is test format, 95% is train format  
 4. `python convert_to_mnist_format.py notMNIST_small 10 300`  
 mean: each class use 300 images to make MNIST format, and 10% is test, 90% is train
-          
-PS: After create file, you must excute following code  
+
+***Important:***  
+After create file, you must excute following code  
 `gzip data/*ubyte.`
+
+## Use it on your target DL model:
+1. copy t10k-labels-idx1-ubyte, t10k-images-idx3-ubyte, train-labels-idx1-ubyte, train-images-idx3-ubyte to MNIST data path that some DL model follow MNIST  
+
+2. Fixed a little source code  
+a. Copy [mnist](https://github.com/Arlen0615/Convert-own-data-to-MNIST-format/tree/master/mnist2) folder to root of DL code.  
+b. And find related like following:  
+    
+```
+from tensorflow.examples.tutorials.mnist import input_data
+mnist = input_data.read_data_sets(‘MNIST Path’, one_hot=True)
+```
+  
+Fixed to
+
+```
+import mnist2.mnist as mn
+mnist = mn.read_data_sets(‘MNIST Path’, one_hot=True, num_classes=18)
+#num_classes is how many class you in your data
+```
+
+3. Change channels  
+If your own data is RGB, then mnist2 will output [batch_size, heigh x width, channels].  
+In normal case, yo still need to know how to change with RGB data, or you can reshape to [batch_size, heigh x width x channels]
+
+Enjoy!
