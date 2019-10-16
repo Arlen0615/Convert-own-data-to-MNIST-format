@@ -30,12 +30,8 @@ mean: use whole data to make MNIST format, and 5% is test format, 95% is train f
 4. `python convert_to_mnist_format.py notMNIST_small 10 300`  
 mean: each class use 300 images to make MNIST format, and 10% is test, 90% is train
 
-***Important:***  
-After create file, you must excute following code  
-`gzip data/*ubyte.`
-
 ## Use it on your target DL model:
-1. copy t10k-labels-idx1-ubyte, t10k-images-idx3-ubyte, train-labels-idx1-ubyte, train-images-idx3-ubyte to MNIST data path that some DL model follow MNIST  
+1. copy t10k-labels-idx1-ubyte.gz, t10k-images-idx3-ubyte.gz, train-labels-idx1-ubyte.gz, train-images-idx3-ubyte.gz to MNIST data path that some DL model follow MNIST  
 
 2. Fixed a little source code  
 a. Copy [mnist](https://github.com/Arlen0615/Convert-own-data-to-MNIST-format/tree/master/mnist2) folder to root of DL code.  

@@ -7,29 +7,16 @@
 #
 # Instructions:
 #
-# 1) if you already have a MNIST data/ directory, rename it and create
-#    a new one
+# 1) if you already have a convert_MNIST directory, rename it to prevent overwriting.
 #
-# $ mv data data.original_mnist
-# $ mkdir convert_MNIST
+# $ mv convert_MNIST convert_MNIST.original_mnist
 #
-# 2) Download and unpack the notMNIST data. This can take a long time
-#    because the notMNIST data set consists of ~500,000 files
+# 2) Run this script to convert the data to MNIST files.
 #
-# $ curl -o notMNIST_small.tar.gz http://yaroslavvb.com/upload/notMNIST/notMNIST_small.tar.gz
-# $ curl -o notMNIST_large.tar.gz http://yaroslavvb.com/upload/notMNIST/notMNIST_large.tar.gz
-# $ tar xzf notMNIST_small.tar.gz
-# $ tar xzf notMNIST_large.tar.gz
+# $ python convert_to_mnist_format.py data_folder test 1000
+# $ python convert_to_mnist_format.py data_folder train 6000
 #
-# 3) Run this script to convert the data to MNIST files, then compress them.
-#    These commands will produce files of the same size as MNIST
-#    notMNIST is larger than MNIST, and you can increase the sizes if you want.
-#
-# $ python convert_to_mnist_format.py notMNIST_small test 1000
-# $ python convert_to_mnist_format.py notMNIST_large train 6000
-# $ gzip convert_MNIST/*ubyte
-#
-# 4) After update, we cancel output path and replace with 'train', 'test' or test ratio number,
+# 3) After update, we cancel output path and replace with 'train', 'test' or test ratio number,
 #    it not only work on 10 labels but more,
 #    it depends on your subdir number under target folder, you can input or not input more command
 #
@@ -55,6 +42,7 @@ import glob
 import sys
 import os
 import random
+import gzip
 
 height = 0
 width = 0
@@ -85,7 +73,7 @@ def get_labels_and_files(folder, number=0):
         filelists.append(filelist)
         dirname = os.path.join(folder, subdir[label])
         for file in os.listdir(dirname):
-            if (file.endswith('.png')):
+            if (file.endswith(('.png', '.jpg'))):
                 fullname = os.path.join(dirname, file)
                 if (os.path.getsize(fullname) > 0):
                     filelist.append(fullname)
@@ -169,14 +157,14 @@ def make_arrays(labelsAndFiles, ratio):
 
 def write_labeldata(labeldata, outputfile):
     header = numpy.array([0x0801, len(labeldata)], dtype='>i4')
-    with open(outputfile, "wb") as f:
+    with gzip.open(outputfile+'.gz', 'wb') as f:
         f.write(header.tobytes())
         f.write(labeldata.tobytes())
 
 def write_imagedata(imagedata, outputfile):
     global height, width
     header = numpy.array([0x0803, len(imagedata), height, width], dtype='>i4')
-    with open(outputfile, "wb") as f:
+    with gzip.open(outputfile+'.gz', 'wb') as f:
         f.write(header.tobytes())
         f.write(imagedata.tobytes())
 
